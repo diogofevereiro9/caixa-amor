@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comando Mensagem Bea</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        body { 
+            font-family: sans-serif;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            background-color: rgb(255, 244, 250); 
+            margin: 0; 
+        }
+        .container { 
+            background: white;
+            padding: 2rem; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            text-align: center; width: 90%; max-width: 400px; 
+        }
+
+        h1 { 
+            color: rgb(252, 118, 118); 
+            margin-bottom: 1.5rem; 
+        }
+
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #ffb3c1; 
+            border-radius: 10px; 
+            margin-bottom: 1rem; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+        }
+
+        button { 
+            background-color: rgb(252, 118, 118); 
+            color: white; 
+            border: none; 
+            padding: 12px 25px; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            width: 100%; 
+        }
+
+        button:hover { 
+            background-color: red; 
+        }
+
+        #status { 
+            margin-top: 1rem; 
+            font-size: 14px; 
+            color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Enviar Mensagem &#128060;</h1>
+    <input type="text" id="messageInput" placeholder="Escreve aqui a mensagem...">
+    <button onclick="sendMessage()">Enviar para a Caixa</button>
+    <p id="status">Estado: Desconectado</p>
+</div>
+
+<script>
+    // --- CONFIGURAÇÃO ADAFRUIT IO ---
+    const username = 'diogofevereiro';
+    const activeKey = 'aio_wPEP63wgOjI4V5PlL7LNavHqNJtZ';
+    const feedName = 'mensagens_amor';
+    // --------------------------------
+
+    const topic = `${username}/feeds/${feedName}`;
+    const client = mqtt.connect('wss://io.adafruit.com:443', {
+        username: username,
+        password: activeKey,
+        clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8)
+    });
+
+    const statusText = document.getElementById('status');
+
+    client.on('connect', () => {
+        statusText.innerText = "Estado: Ligado ao Broker ✅";
+        statusText.style.color = "green";
+    });
+
+    client.on('error', (err) => {
+        statusText.innerText = "Erro na conexão ❌";
+        statusText.style.color = "red";
+    });
+
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const msg = input.value;
+
+        if (msg) {
+            client.publish(topic, msg, { qos: 0, retain: false }, (err) => {
+                if (!err) {
+                    alert("Mensagem enviada com sucesso!");
+                    input.value = "";
+                } else {
+                    alert("Erro ao enviar: " + err);
+                }
+            });
+        } else {
+            alert("Escreve algo primeiro!");
+        }
+    }
+</script>
+
+</body>
+</html>
